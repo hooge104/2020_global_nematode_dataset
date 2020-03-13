@@ -1,8 +1,7 @@
 ---
 title: "Global nematode dataset"
-author: "J. van den Hoogen & S. Geisen et al. 2019"
+author: "J. van den Hoogen et al., Scientific Data, 2020"
 output:
-  html_document: default
   github_document: default
 ---
 ```{r setup, include=FALSE}
@@ -23,11 +22,8 @@ suppressPackageStartupMessages({
 
 # Initial data formating and collating
 ```{r Data import & general calculations}
-# Set working directory
-setwd("~/ETH/Projects/Nematodes_SciData")
-
 # Load full dataset, including WWF_Biome and Pixel_Lat, Pixel_Long
-full_data_wBiome <- fread("data/20191028_Nematode_v2_final.csv") %>% 
+full_data_wBiome <- fread("data/nematode_full_dataset_wBiome.csv") %>% 
   mutate(WWF_Biome = round(WWF_Biome, 0))
 
 # Set WWF_Biome to 25 as arbitrary biome for Antarctic sites
@@ -41,10 +37,11 @@ aggregated <- full_data_wBiome %>%
   filter(!is.na(Pixel_Lat))
 
 # Write to csv
-write.csv(aggregated, "data/20191029_nematodes_aggregated.csv", row.names = F)
+# Uncomment if need be
+# write.csv(aggregated, "data/nematodes_aggregated.csv", row.names = F)
 
-# This dataset ("20191029_nematodes_aggregated.csv") was sampled to pull covariate data
-sampled_data <- read.csv("data/20191029_nematode_aggretatedPixelValues_wBiome.csv") %>%
+# This dataset ("nematodes_aggregated.csv") was sampled to pull covariate data
+sampled_data <- read.csv("data/nematode_aggregated_wCovariateData.csv") %>%
   mutate(WWF_Biome = round(WWF_Biome,0)) 
 
 Data_tot <- sampled_data %>% 
@@ -62,8 +59,11 @@ full_data_summary <- full_data_wBiome %>%
   group_by(Group) %>% 
   summarise(mean = mean(Count), median = median(Count), n = n()) %>% 
   mutate(mean = round(mean),median = round(median))
+
 full_data_summary
-write.csv(full_data_summary,"Table1_full_data_sum.csv") 
+
+# Write to file
+write.csv(full_data_summary,"output/table1_full_data_sum.csv") 
 ```
 
 # Sampling locations
@@ -96,7 +96,7 @@ nematode_pointmap <- ggplot() + geom_polygon(data = map_data("world"),
 nematode_pointmap
 
 # Save to file
-ggsave("figXX_nematode_pointmap.pdf", plot = nematode_pointmap)
+ggsave("output/figXX_nematode_pointmap.pdf", plot = nematode_pointmap)
 ```
 
 # Summary per biome
@@ -135,5 +135,89 @@ Data_biome_sum <- Data_biome %>%
 
 Data_biome_sum
 
-write.csv(Data_biome_sum, "Table2_biome_sum.csv")
+# Write to file
+write.csv(Data_biome_sum, "output/table2_biome_sum.csv")
+```
+
+# Frequency plot per method
+```{r}
+method_plot_data <- full_data_wBiome %>% 
+  group_by(sampling_ref) %>% 
+  summarise(n = n()) %>% 
+  na_if("") %>% na.omit() %>% 
+  mutate(sampling_ref = replace(sampling_ref, sampling_ref == "Baermann", "Baermann funnel")) %>% 
+  mutate(sampling_ref = replace(sampling_ref, sampling_ref == "Cobb", "Decanting and sieving")) %>% 
+  mutate(sampling_ref = replace(sampling_ref, sampling_ref == "Jenkins/Freckman", "Sugar floatation")) %>% 
+  mutate(sampling_ref = replace(sampling_ref, sampling_ref == "Oostenbrink", "Oostenbrink elutriator ")) %>% 
+  mutate(sampling_ref = replace(sampling_ref, sampling_ref == "Seinhorst", "Seinhorst elutriation")) %>% 
+  mutate(sampling_ref = replace(sampling_ref, sampling_ref == "Whitehead", "Whitehead tray"))
+
+methods_barplot <- ggplot((method_plot_data %>% mutate(sampling_ref = fct_reorder(sampling_ref, desc(n)))), aes(x = sampling_ref, y = n)) +
+  geom_bar(stat = "identity", fill = "#328da8", alpha = 0.6, width = 0.6) +
+  theme_minimal() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(),
+    axis.ticks = element_line(),
+    plot.title = element_text(hjust = 0.5, size = 10),
+    axis.text.x = element_text(hjust = 1, angle = 60),
+    legend.position = "none") +
+  ylab("Number of samples") +
+  xlab("")
+
+methods_barplot
+
+# Save to file
+save_plot(methods_barplot, filename = "output/methods_barplot.pdf", device = "pdf")
+```
+
+```{r}
+plot_data <- sampled_data %>% 
+  select(Aridity_Index,WorldClim2_Annual_Precipitation, WorldClim2_Annual_Mean_Temperature, SG_Soil_pH_H2O_015cm, 
+         SG_SOC_Content_015cm, Human_Development_Percentage, SG_CEC_015cm, SG_Sand_Content_015cm, Npp, EVI) %>% 
+  mutate(SG_Soil_pH_H2O_015cm = SG_Soil_pH_H2O_015cm/10) %>% 
+  rename("Soil pH" = SG_Soil_pH_H2O_015cm,
+         "SOC content (g/kg)" = SG_SOC_Content_015cm,
+         "Mean annual temperature (°C)" = WorldClim2_Annual_Mean_Temperature,
+         "Annual precipitation (mm)" = WorldClim2_Annual_Precipitation,
+         "Human development (%)" = Human_Development_Percentage,
+         "Aridity Index" = Aridity_Index,
+         "Cation exchange capacity (cmolc/kg)" = SG_CEC_015cm,
+         "Sand content (%)" = SG_Sand_Content_015cm,
+         "Net Primary Productivity" = Npp,
+         "Enhanced Vegeation Index" = EVI) %>% 
+  pivot_longer(cols = everything(),
+               names_to = "Variable",
+               values_to = "Value") %>% 
+  na.omit() 
+
+
+plot_overall <- ggplot(data = plot_data, aes(Value)) +
+  geom_density(position = "stack", 
+               aes(fill = "red",
+                   alpha = 0.25,
+                   y = ..scaled..)) +
+  facet_wrap(vars(Variable), 
+             scales = "free_x", 
+             nrow = 2, 
+             strip.position = "bottom") +
+  theme_minimal() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(),
+    axis.ticks = element_line(),
+    # plot.title = element_text(hjust = 0.5, size = 10),
+    legend.position = "none",
+    strip.text = element_text(size = 8),
+    strip.placement = "outside",
+    aspect.ratio = 1) +
+  ylab("Relative frequency") +
+  xlab("")
+
+plot_overall
+
+save_plot("output/sampled_range.pdf", plot = plot_overall, base_height = 5, base_width = 12)
+
 ```
