@@ -11,7 +11,7 @@ All code was written in `R 3.6.1`.
 In the folder `data` the following files can be found:
 
 ### Table S1:
-`20191028_Nematode_v2_final.csv`
+`nematode_full_dataset_wBiome.csv`
 
 | Field           | Description                                         |
 |-----------------|-----------------------------------------------------|
@@ -34,7 +34,7 @@ In the folder `data` the following files can be found:
 
 
 ### Table S2:
-`20191029_nematode_aggretatedPixelValues_wBiome.csv`
+`nematode_abundance_aggregated_wCovar.csv`
 
 | Band_Name                                      | Description                                                                                              | Layer_Group             | Units                                                          | Source                                                                                             |
 |------------------------------------------------|----------------------------------------------------------------------------------------------------------|-------------------------|----------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
