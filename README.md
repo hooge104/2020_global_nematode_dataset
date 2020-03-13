@@ -10,7 +10,7 @@ Code to reproduce most of the figures is available as an `.Rmd` document, knitte
 ## Metadata
 In the folder `data` the following files can be found:
 
-### Table `nematode_full_dataset_wBiome.csv`:
+`nematode_full_dataset_wBiome.csv`
 
 | Field           | Description                                         |
 |-----------------|-----------------------------------------------------|
@@ -31,8 +31,7 @@ In the folder `data` the following files can be found:
 | DOI/URL         | Reference including doi where available             |
 | Data_provider   | Original data provider                              |
 
-
-### Table `nematode_abundance_aggregated_wCovar.csv`:
+`nematode_abundance_aggregated_wCovar.csv`:
 
 | Band_Name                                      | Description                                                                                              | Layer_Group             | Units                                                          | Source                                                                                             |
 |------------------------------------------------|----------------------------------------------------------------------------------------------------------|-------------------------|----------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
