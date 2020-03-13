@@ -5,7 +5,7 @@ This repository contains the code associated with the paper `A global database o
 All data are also available via figshare, doi: [10.6084/m9.figshare.c.4718003](https://doi.org/10.6084/m9.figshare.c.4718003). Raw nematode abundance data (6,825 samples) are available as a csv file: “nematode_full_dataset_wBiome.csv”. Abundance data aggregated into 30 Arc-seconds pixels (1,933 unique locations), combined with environmental covariate data are available as a csv file: “nematode_abundance_aggregated_wCovar.csv”. Full metadata, including descriptions, units, and source information, of all global covariate layers are available as a csv file: “metadata.csv”.
 
 ## Code
-Code to reproduce summaries, tables and most of the figures is available as an `.Rmd` document, knitted version available [here](https://github.com/hooge104/2020_global_nematode_dataset/blob/master/20191029_SciData.md).
+Code to reproduce summaries, tables and most figures is available as an `.Rmd` document, knitted version available [here](https://github.com/hooge104/2020_global_nematode_dataset/blob/master/20191029_SciData.md).
 
 ## Metadata
 In the folder `data` the following files can be found:
