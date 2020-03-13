@@ -1,0 +1,139 @@
+---
+title: "Global nematode dataset"
+author: "J. van den Hoogen & S. Geisen et al. 2019"
+output:
+  html_document: default
+  github_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages, results='hide', message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+  library(cowplot)
+  library(scales)
+  library(plyr)
+  library(reshape2)
+  library(RColorBrewer)
+  library(data.table)
+  library(tidyverse)
+})
+```
+
+# Initial data formating and collating
+```{r Data import & general calculations}
+# Set working directory
+setwd("~/ETH/Projects/Nematodes_SciData")
+
+# Load full dataset, including WWF_Biome and Pixel_Lat, Pixel_Long
+full_data_wBiome <- fread("data/20191028_Nematode_v2_final.csv") %>% 
+  mutate(WWF_Biome = round(WWF_Biome, 0))
+
+# Set WWF_Biome to 25 as arbitrary biome for Antarctic sites
+full_data_wBiome[full_data_wBiome$Latitude < -60,]$WWF_Biome <- 25
+
+# Aggregate onto pixel level
+aggregated <- full_data_wBiome %>%  
+  select(Bacterivores, Fungivores, Herbivores, Omnivores, Predators, Unidentified, Total_Number, Pixel_Lat, Pixel_Long) %>% 
+  group_by(Pixel_Lat, Pixel_Long) %>% 
+  summarise_all(mean) %>% 
+  filter(!is.na(Pixel_Lat))
+
+# Write to csv
+write.csv(aggregated, "data/20191029_nematodes_aggregated.csv", row.names = F)
+
+# This dataset ("20191029_nematodes_aggregated.csv") was sampled to pull covariate data
+sampled_data <- read.csv("data/20191029_nematode_aggretatedPixelValues_wBiome.csv") %>%
+  mutate(WWF_Biome = round(WWF_Biome,0)) 
+
+Data_tot <- sampled_data %>% 
+  select(Total_Number, Bacterivores, Fungivores, Herbivores, Omnivores, Predators) %>% 
+  pivot_longer(everything(),
+               names_to = "Group",
+               values_to = "Count")
+```
+
+```{r}
+full_data_summary <- full_data_wBiome %>% 
+  select(Bacterivores, Fungivores, Herbivores, Omnivores, Predators, Total_Number) %>% 
+  pivot_longer(everything(),names_to = "Group", values_to = "Count") %>% 
+  na.omit() %>% 
+  group_by(Group) %>% 
+  summarise(mean = mean(Count), median = median(Count), n = n()) %>% 
+  mutate(mean = round(mean),median = round(median))
+full_data_summary
+write.csv(full_data_summary,"Table1_full_data_sum.csv") 
+```
+
+# Sampling locations
+```{r Observations per biome}
+# Plot sampling points on map
+nematode_pointmap <- ggplot() + geom_polygon(data = map_data("world"), 
+                                             aes(x = long, y = lat, group = group),
+                                             fill = "#bababa",
+                                             color = NA,
+                                             size = 0.1) + 
+  coord_fixed(1.1) +
+  geom_point(data = full_data_wBiome,
+             aes(x = Longitude, y = Latitude),
+             fill = "red",
+             color = "black",
+             pch = 21
+  ) +
+  scale_fill_gradientn(colors = brewer.pal(8, "YlOrRd"),
+                       limits = c(0, 4000),
+                       oob = scales::squish,
+                       name = "Nematodes per 100g dry soil") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        legend.box="horizontal",
+        panel.grid = element_blank(),
+        axis.title=element_blank(),
+        axis.text=element_blank()) +
+  guides(fill = guide_colorbar(title.position = "top"))
+
+nematode_pointmap
+
+# Save to file
+ggsave("figXX_nematode_pointmap.pdf", plot = nematode_pointmap)
+```
+
+# Summary per biome
+```{r}
+Data_biome <- full_data_wBiome %>% 
+  select('Total_Number','Bacterivores','Fungivores',"Herbivores",'Omnivores','Predators','WWF_Biome') %>% 
+  mutate(WWF_Biome = round(WWF_Biome)) %>% 
+  filter(WWF_Biome != 98) %>%
+  filter(WWF_Biome != 0) %>% 
+  # na.omit() %>% 
+  reshape2::melt(id.vars = "WWF_Biome") %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 1, "Tropical Moist Forests")) %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 2, "Tropical Dry Forests")) %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 3, "Tropical Coniferous Forests")) %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 4, "Temperate Broadleaf Forests")) %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 5, "Temperate Conifer Forests")) %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 6, "Boreal Forests")) %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 7, "Tropical Grasslands")) %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 8, "Temperate Grasslands")) %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 9, "Flooded Grasslands")) %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 10, "Montane Grasslands")) %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 11, "Tundra")) %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 12, "Mediterranean Forests")) %>%
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 13, "Deserts")) %>% 
+  mutate(WWF_Biome = replace(WWF_Biome, WWF_Biome == 25, "Antarctica")) %>% 
+  setNames(., c("Biome","Group","Count")) 
+
+Data_biome_sum <- Data_biome %>%
+  filter(Group == "Total_Number") %>% 
+  group_by(Biome) %>% 
+  dplyr::summarize(mean = mean(Count, na.rm=TRUE), 
+                   median = median(Count, na.rm=TRUE),
+                   n = n()) %>% 
+  arrange(desc(median))  %>% 
+  mutate(mean = round(mean), median = round(median))
+
+Data_biome_sum
+
+write.csv(Data_biome_sum, "Table2_biome_sum.csv")
+```
