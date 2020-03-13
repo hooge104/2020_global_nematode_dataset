@@ -1,5 +1,5 @@
 # Global database of soil nematodes
-This repository contains the code associated with the paper `A global database of soil nematode abundance and functional group composition`, doi: [10.1038/s41597-020-0437-3](https://doi.org/10.1038/s41597-020-0437-3). This dataset includes 6,825 georeferenced soil samples from all continents and biomes. For geospatial mapping purposes these samples are aggregated into 1,933 unique 1-km pixels, each of which is linked to 73 global environmental covariate data layers. 
+This repository contains the code associated with the paper `A global database of soil nematode abundance and functional group composition`, doi: [10.1038/s41597-020-0437-3](https://doi.org/10.1038/s41597-020-0437-3). 
 
 ## Data
 All data are available via figshare, doi: [10.6084/m9.figshare.c.4718003](https://doi.org/10.6084/m9.figshare.c.4718003). Raw nematode abundance data (6,825 samples) are available as a csv file: “nematode_full_dataset_wBiome.csv”. Abundance data aggregated into 30 Arc-seconds pixels (1,933 unique locations), combined with environmental covariate data are available as a csv file: “nematode_abundance_aggregated_wCovar.csv”. Full metadata, including descriptions, units, and source information, of all global covariate layers are available as a csv file: “metadata.csv”.
